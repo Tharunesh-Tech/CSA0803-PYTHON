@@ -1,0 +1,52 @@
+import random
+import time
+
+readings = [random.randint(0, 20) for _ in range(365)]
+
+# Weekly totals
+weekly_totals = [sum(readings[i:i+7]) for i in range(0, len(readings), 7)]
+
+# Maximum and minimum
+print("Wettest day:", max(readings), "Position:", readings.index(max(readings)))
+print("Driest day:", min(readings), "Position:", readings.index(min(readings)))
+
+# Naive moving average
+def naive_average(readings):
+    return [sum(readings[i:i+7]) / 7 for i in range(len(readings)-6)]
+
+# Running sum moving average
+def running_average(readings):
+    if len(readings) < 7:
+        return []
+
+    result = []
+    current_sum = sum(readings[:7])
+    result.append(current_sum / 7)
+
+    for i in range(7, len(readings)):
+        current_sum += readings[i] - readings[i-7]
+        result.append(current_sum / 7)
+
+    return result
+
+# Dry days
+dry_days = [i+1 for i, value in enumerate(readings) if value == 0]
+
+print("Weekly totals:", weekly_totals)
+print("Naive average:", naive_average(readings))
+print("Running average:", running_average(readings))
+print("Dry days:", dry_days)
+
+# Time comparison
+for n in [365, 36500, 365000]:
+    data = [random.randint(0, 20) for _ in range(n)]
+
+    start = time.time()
+    naive_average(data)
+    naive_time = time.time() - start
+
+    start = time.time()
+    running_average(data)
+    running_time = time.time() - start
+
+    print(n, "Naive:", naive_time, "Running:", running_time)
