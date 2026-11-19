@@ -1,0 +1,58 @@
+
+def save_returns(books):
+    with open("returns.log", "a", encoding="utf-8") as log:
+        for book in books:
+            log.write(book + "\n")
+
+def process(day_file):
+    try:
+        with open(day_file, "r", encoding="utf-8") as file:
+            books = [
+                line.strip()
+                for line in file
+                if line.strip()
+            ]
+
+        save_returns(books)
+        print(day_file, "processed successfully.")
+
+    except FileNotFoundError as e:
+        print("Missing file:", day_file)
+
+        with open("error.log", "a", encoding="utf-8") as error:
+            error.write(f"{day_file}: {e}\n")
+
+    except PermissionError as e:
+        print("Permission denied:", day_file)
+
+        with open("error.log", "a", encoding="utf-8") as error:
+            error.write(f"{day_file}: {e}\n")
+
+
+if __name__ == "__main__":
+    open("returns.log", "w").close()
+
+    # Create three sample daily files
+    days = {
+        "day1.txt": ["Python Book", "Java Book"],
+        "day2.txt": ["C Programming", "Data Science"],
+        "day3.txt": ["Web Development", "Database Systems"]
+    }
+
+    for filename, books in days.items():
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write("\n".join(books) + "\n")
+
+    for filename in days:
+        process(filename)
+
+    # Test missing file
+    process("missing_day.txt")
+
+    print("\nRETURN BOOKS LOG")
+    with open("returns.log", "r", encoding="utf-8") as file:
+        print(file.read())
+
+    print("ERROR LOG")
+    with open("error.log", "r", encoding="utf-8") as file:
+        print(file.read())
