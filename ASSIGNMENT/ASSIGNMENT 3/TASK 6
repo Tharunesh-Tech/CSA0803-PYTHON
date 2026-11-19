@@ -1,0 +1,142 @@
+import random
+import time
+
+# Nested dictionary
+trains = {
+    101: {
+        "name": "Chennai Express",
+        "stations": [
+            ("Chennai", "06:00", "06:15"),
+            ("Katpadi", "08:00", "08:05"),
+            ("Bangalore", "11:00", "11:15")
+        ],
+        "days": {"Monday", "Tuesday", "Wednesday"}
+    },
+
+    102: {
+        "name": "Coimbatore Express",
+        "stations": [
+            ("Chennai", "07:00", "07:15"),
+            ("Salem", "10:00", "10:05"),
+            ("Coimbatore", "12:00", "12:15")
+        ],
+        "days": {"Monday", "Friday"}
+    },
+
+    103: {
+        "name": "Madurai Express",
+        "stations": [
+            ("Chennai", "08:00", "08:10"),
+            ("Trichy", "12:00", "12:05"),
+            ("Madurai", "14:00", "14:15")
+        ],
+        "days": {"Tuesday", "Thursday"}
+    },
+
+    104: {
+        "name": "Bangalore Express",
+        "stations": [
+            ("Chennai", "09:00", "09:10"),
+            ("Katpadi", "11:00", "11:05"),
+            ("Bangalore", "14:00", "14:15")
+        ],
+        "days": {"Monday", "Wednesday"}
+    },
+
+    105: {
+        "name": "Salem Express",
+        "stations": [
+            ("Chennai", "10:00", "10:10"),
+            ("Salem", "13:00", "13:05"),
+            ("Erode", "15:00", "15:15")
+        ],
+        "days": {"Monday", "Sunday"}
+    }
+}
+
+# Find trains stopping at a station on a given day
+def find_trains(station, day):
+    result = []
+
+    for number, details in trains.items():
+        if day in details["days"]:
+            for stop in details["stations"]:
+                if stop[0] == station:
+                    result.append((number, details["name"], stop[1], stop[2]))
+
+    return sorted(result, key=lambda x: x[2])
+
+print("Trains:", find_trains("Chennai", "Monday"))
+
+# Access departure time of third station
+print("Departure:", trains[101]["stations"][2][2])
+
+# Print timetable
+for number, details in trains.items():
+    print("\nTrain:", number, details["name"])
+    print("Running days:", details["days"])
+
+    for station, arrival, departure in details["stations"]:
+        print(station, arrival, departure)
+
+# Create station index
+station_index = {}
+
+for number, details in trains.items():
+    for station, arrival, departure in details["stations"]:
+        station_index.setdefault(station, []).append(
+            (number, arrival, departure, details["days"])
+        )
+
+def indexed_search(station, day):
+    return [
+        (number, arrival, departure)
+        for number, arrival, departure, days in station_index.get(station, [])
+        if day in days
+    ]
+
+print("Indexed search:", indexed_search("Chennai", "Monday"))
+
+# Generate larger timetable
+for n in [100, 1000, 10000]:
+    timetable = {}
+
+    for i in range(n):
+        timetable[i] = {
+            "name": f"Train {i}",
+            "stations": [
+                (random.choice(["Chennai", "Salem", "Madurai", "Trichy"]),
+                 "10:00", "10:15")
+                for _ in range(5)
+            ],
+            "days": {"Monday", "Friday"}
+        }
+
+    # Without index
+    start = time.time()
+
+    for number, details in timetable.items():
+        for stop in details["stations"]:
+            if stop[0] == "Chennai":
+                pass
+
+    normal_time = time.time() - start
+
+    # With index
+    index = {}
+
+    for number, details in timetable.items():
+        for stop in details["stations"]:
+            index.setdefault(stop[0], []).append(number)
+
+    start = time.time()
+    result = index.get("Chennai", [])
+    indexed_time = time.time() - start
+
+    print(n, "Normal:", normal_time, "Indexed:", indexed_time)
+
+# Unknown station
+print("Unknown:", find_trains("Mumbai", "Monday"))
+
+# Train not running on given day
+print("Sunday:", find_trains("Chennai", "Sunday"))
