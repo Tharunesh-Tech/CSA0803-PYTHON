@@ -1,0 +1,148 @@
+import re
+import time
+import random
+import string
+
+# Normalize phone number
+def normalize_number(number):
+    if not number:
+        return ""
+
+    digits = re.sub(r"\D", "", number)
+
+    if digits.startswith("91") and len(digits) == 12:
+        digits = digits[2:]
+
+    return digits
+
+# Normalize name
+def normalize_name(name):
+    if not name:
+        return ""
+
+    return " ".join(name.lower().strip().split())
+
+# Contact merging
+def merge_contacts(contacts):
+    merged = {}
+
+    for contact in contacts:
+        name = normalize_name(contact.get("name", ""))
+        number = normalize_number(contact.get("phone", ""))
+        email = contact.get("email", "").strip().lower()
+
+        if number:
+            key = number
+        elif email:
+            key = email
+        else:
+            key = "name:" + name
+
+        if key not in merged:
+            merged[key] = {
+                "name": contact.get("name", ""),
+                "numbers": set(),
+                "emails": set()
+            }
+
+        if number:
+            merged[key]["numbers"].add(number)
+
+        if email:
+            merged[key]["emails"].add(email)
+
+        if not merged[key]["name"] and name:
+            merged[key]["name"] = contact["name"]
+
+    return list(merged.values())
+
+
+# Sample contacts
+contacts = [
+    {
+        "name": "Dr. Ravi",
+        "phone": "+91 98400 12345",
+        "email": "ravi@gmail.com"
+    },
+    {
+        "name": "ravi kumar",
+        "phone": "9840012345",
+        "email": "ravi@gmail.com"
+    },
+    {
+        "name": "Sujith",
+        "phone": "9876543210",
+        "email": "sujith@gmail.com"
+    },
+    {
+        "name": "Sujith Reddy",
+        "phone": "98765-43210",
+        "email": "sujith2@gmail.com"
+    },
+    {
+        "name": "Arun",
+        "phone": "",
+        "email": "arun@gmail.com"
+    },
+    {
+        "name": "Arun",
+        "phone": "",
+        "email": "arun@gmail.com"
+    }
+]
+
+result = merge_contacts(contacts)
+
+print("Merged Contacts:")
+
+for contact in result:
+    print(contact)
+
+# Generate test contacts
+for n in [1000, 100000]:
+    test_contacts = []
+
+    for i in range(n):
+        test_contacts.append({
+            "name": f"Person {i}",
+            "phone": f"98400{i:06d}",
+            "email": f"person{i}@gmail.com"
+        })
+
+    start = time.time()
+    merged_result = merge_contacts(test_contacts)
+    dictionary_time = time.time() - start
+
+    print("Contacts:", n)
+    print("Dictionary merging time:", dictionary_time)
+
+# Compare every pair
+def pair_comparison(contacts):
+    duplicates = []
+
+    for i in range(len(contacts)):
+        for j in range(i + 1, len(contacts)):
+            number1 = normalize_number(contacts[i].get("phone", ""))
+            number2 = normalize_number(contacts[j].get("phone", ""))
+
+            if number1 and number1 == number2:
+                duplicates.append((i, j))
+
+    return duplicates
+
+small_contacts = contacts[:1000]
+
+start = time.time()
+pair_comparison(small_contacts)
+pair_time = time.time() - start
+
+print("Pair comparison time:", pair_time)
+
+# Hand verification
+small = [
+    {"name": "Ravi", "phone": "9840012345", "email": "ravi@gmail.com"},
+    {"name": "Ravi Kumar", "phone": "+91 98400 12345", "email": "ravi2@gmail.com"},
+    {"name": "Arun", "phone": "9876543210", "email": ""}
+]
+
+print("Verified result:", merge_contacts(small))
