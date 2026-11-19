@@ -1,0 +1,75 @@
+
+import os
+from collections import defaultdict
+
+def process_attendance(folder):
+    attendance = defaultdict(lambda: {"P": 0, "A": 0})
+    errors = []
+
+    try:
+        files = sorted(
+            f for f in os.listdir(folder)
+            if f.endswith(".csv")
+        )
+
+        for filename in files:
+            path = os.path.join(folder, filename)
+
+            try:
+                with open(path, "r", encoding="utf-8") as file:
+                    for line_no, line in enumerate(file, 1):
+                        try:
+                            parts = line.strip().split(",")
+
+                            if len(parts) != 3:
+                                raise ValueError("Invalid fields")
+
+                            reg_no, date, status = parts
+
+                            if status not in ("P", "A"):
+                                raise ValueError("Invalid status")
+
+                            attendance[reg_no][status] += 1
+
+                        except ValueError as e:
+                            errors.append(
+                                f"{filename}, Line {line_no}: {line.strip()} - {e}"
+                            )
+
+            except (FileNotFoundError, PermissionError) as e:
+                errors.append(f"{filename}: {e}")
+
+        with open("attendance_report.csv", "w", encoding="utf-8") as report:
+            report.write("Register Number,Present,Absent,Percentage\n")
+
+            for reg_no, counts in attendance.items():
+                total = counts["P"] + counts["A"]
+                percentage = (
+                    counts["P"] / total * 100 if total else 0
+                )
+
+                report.write(
+                    f"{reg_no},{counts['P']},{counts['A']},"
+                    f"{percentage:.2f}\n"
+                )
+
+        with open("below_75.txt", "w", encoding="utf-8") as low:
+            for reg_no, counts in attendance.items():
+                total = counts["P"] + counts["A"]
+                percentage = counts["P"] / total * 100 if total else 0
+
+                if percentage < 75:
+                    low.write(f"{reg_no}: {percentage:.2f}%\n")
+
+        with open("attendance_errors.txt", "w", encoding="utf-8") as error_file:
+            for error in errors:
+                error_file.write(error + "\n")
+
+        print("Attendance processing completed.")
+        print("Reports generated successfully.")
+
+    except FileNotFoundError:
+        print("Attendance folder not found.")
+
+if __name__ == "__main__":
+    process_attendance("attendance_files")
