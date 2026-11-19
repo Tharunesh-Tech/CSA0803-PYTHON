@@ -1,0 +1,94 @@
+import random
+import time
+import sys
+
+readings = [random.uniform(-60, 60) for _ in range(10000)]
+
+# Method 1: For loop with append
+def using_loop(data):
+    celsius = []
+
+    for value in data:
+        if -50 <= value <= 50:
+            celsius.append(value)
+
+    fahrenheit = []
+
+    for value in celsius:
+        fahrenheit.append((value * 9/5) + 32)
+
+    return celsius, fahrenheit
+
+# Method 2: List comprehension
+def using_comprehension(data):
+    celsius = [x for x in data if -50 <= x <= 50]
+    fahrenheit = [(x * 9/5) + 32 for x in celsius]
+
+    return celsius, fahrenheit
+
+# Method 3: Map and filter
+def using_map_filter(data):
+    celsius = list(filter(lambda x: -50 <= x <= 50, data))
+    fahrenheit = list(map(lambda x: (x * 9/5) + 32, celsius))
+
+    return celsius, fahrenheit
+
+# Alarm minutes
+alarms = [
+    i for i, temp in enumerate(readings)
+    if -50 <= temp <= 50 and not (2 <= temp <= 8)
+]
+
+print("Loop:", using_loop(readings))
+print("Comprehension:", using_comprehension(readings))
+print("Map Filter:", using_map_filter(readings))
+print("Alarm minutes:", alarms)
+
+# Dictionary comprehension
+temperature_dict = {
+    i: temp for i, temp in enumerate(readings)
+    if -50 <= temp <= 50
+}
+
+# Set comprehension
+temperature_set = {
+    temp for temp in readings if -50 <= temp <= 50
+}
+
+print("Dictionary:", temperature_dict)
+print("Set:", temperature_set)
+
+# Time comparison
+for n in [10000, 100000, 1000000]:
+    data = [random.uniform(-60, 60) for _ in range(n)]
+
+    start = time.time()
+    r1 = using_loop(data)
+    t1 = time.time() - start
+
+    start = time.time()
+    r2 = using_comprehension(data)
+    t2 = time.time() - start
+
+    start = time.time()
+    r3 = using_map_filter(data)
+    t3 = time.time() - start
+
+    print(n, "Loop:", t1, "Comprehension:", t2, "Map:", t3)
+
+    print(r1 == r2 == r3)
+
+# Generator expression memory
+generator = (x for x in readings if -50 <= x <= 50)
+list_data = [x for x in readings if -50 <= x <= 50]
+
+print("List memory:", sys.getsizeof(list_data))
+print("Generator memory:", sys.getsizeof(generator))
+
+# All valid and all invalid
+print(using_comprehension([2, 3, 4, 5]))
+print(using_comprehension([100, 200, 300]))
+
+# Generator expression
+total = sum(x for x in readings if -50 <= x <= 50)
+print("Total:", total)
