@@ -1,0 +1,40 @@
+
+import time
+
+items = [f"Item{i}:Rs{i % 50}" for i in range(200000)]
+
+
+# Original solution
+def original(items):
+    text = ""
+
+    for item in items:
+        text += item + ";"
+
+    return text
+
+
+# Redesigned solution
+def redesigned(items):
+    return ";".join(items) + ";"
+
+
+# Original execution time
+start = time.perf_counter()
+result1 = original(items)
+time1 = time.perf_counter() - start
+
+
+# Redesigned execution time
+start = time.perf_counter()
+result2 = redesigned(items)
+time2 = time.perf_counter() - start
+
+
+print("Original time:", time1)
+print("Redesigned time:", time2)
+
+print("Same output:", result1 == result2)
+
+if time2 > 0:
+    print("Speed improvement:", time1/time2, "times")
