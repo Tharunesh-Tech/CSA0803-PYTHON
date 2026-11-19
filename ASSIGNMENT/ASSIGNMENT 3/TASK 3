@@ -1,0 +1,81 @@
+import random
+import string
+import time
+from collections import Counter
+
+calls = [
+    "seeds not received seeds delayed",
+    "fertiliser price high",
+    "seeds price high subsidy not received",
+]
+
+STOP = {"not", "high"}
+
+def frequencies(texts, stop):
+    # TODO 1
+    counts = {}
+
+    for text in texts:
+        words = text.lower().split()
+
+        for word in words:
+            word = word.strip(string.punctuation)
+
+            if word and word not in stop:
+                counts[word] = counts.get(word, 0) + 1
+
+    return counts
+
+def top(counts, k):
+    # TODO 2
+    return sorted(counts.items(), key=lambda x: (-x[1], x[0]))[:k]
+
+print(top(frequencies(calls, STOP), 3))
+
+# Group complaints by district
+complaints = [
+    ("Chennai", "Seeds delayed"),
+    ("Madurai", "Fertiliser problem"),
+    ("Chennai", "Water problem"),
+    ("Salem", "Crop disease"),
+    ("Madurai", "Seeds not received")
+]
+
+districts = {}
+
+for district, complaint in complaints:
+    districts.setdefault(district, []).append(complaint)
+
+print("District complaints:", districts)
+
+# Generate test data
+words = ["seeds", "price", "fertiliser", "water", "crop"]
+
+for n in [1000, 10000, 100000]:
+    data = [
+        " ".join(random.choices(words, k=10))
+        for _ in range(n)
+    ]
+
+    start = time.time()
+    result = frequencies(data, set())
+    dictionary_time = time.time() - start
+
+    all_words = " ".join(data).split()
+    unique_words = set(all_words)
+
+    start = time.time()
+    result2 = {word: all_words.count(word) for word in unique_words}
+    list_time = time.time() - start
+
+    start = time.time()
+    result3 = Counter(all_words)
+    counter_time = time.time() - start
+
+    print("Complaints:", n)
+    print("Dictionary:", dictionary_time)
+    print("List count:", list_time)
+    print("Counter:", counter_time)
+
+# Test empty text and case
+print(frequencies(["", "SEEDS seeds Seeds!", "water"], STOP))
