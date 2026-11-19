@@ -1,0 +1,195 @@
+
+import os
+
+# VALIDATE STUDENT RECORD
+
+def validate_record(line):
+    parts = line.strip().split(",")
+
+    if len(parts) != 5:
+        raise ValueError("Invalid number of fields")
+
+    reg_no, name, department, email, events = [
+        x.strip() for x in parts
+    ]
+
+    if not reg_no or not name or not department or not events:
+        raise ValueError("Missing required fields")
+
+    if email.count("@") != 1:
+        raise ValueError("Invalid email address")
+
+    username, domain = email.split("@")
+
+    if not username or "." not in domain:
+        raise ValueError("Invalid email format")
+
+    event_list = [x.strip() for x in events.split(";")]
+
+    if not all(event_list):
+        raise ValueError("Invalid event name")
+
+    return {
+        "reg_no": reg_no,
+        "name": name,
+        "department": department,
+        "email": email,
+        "events": event_list
+    }
+
+
+# READ FIVE DEPARTMENT FILES
+
+def read_files(folder):
+    records = []
+    errors = []
+
+    for i in range(1, 6):
+        filename = f"department{i}.txt"
+        path = os.path.join(folder, filename)
+
+        try:
+            with open(path, "r", encoding="utf-8") as file:
+
+                for line_no, line in enumerate(file, 1):
+
+                    if line.strip():
+                        records.append(
+                            (filename, line_no, line.strip())
+                        )
+
+        except FileNotFoundError:
+            errors.append(f"{filename}: File not found")
+
+        except PermissionError:
+            errors.append(f"{filename}: Permission denied")
+
+        except UnicodeDecodeError:
+            errors.append(f"{filename}: Encoding error")
+
+    return records, errors
+
+
+# PROCESS REGISTRATIONS AND REMOVE DUPLICATES
+
+def process_records(records, errors):
+    master = {}
+    seen = set()
+
+    for filename, line_no, line in records:
+
+        try:
+            student = validate_record(line)
+
+            reg_no = student["reg_no"]
+
+            if reg_no in seen:
+                errors.append(
+                    f"{filename}, Line {line_no}: Duplicate registration {reg_no}"
+                )
+                continue
+
+            seen.add(reg_no)
+            master[reg_no] = student
+
+        except ValueError as e:
+            errors.append(
+                f"{filename}, Line {line_no}: {e} - {line}"
+            )
+
+    return master
+
+
+# GENERATE OUTPUT REPORTS
+
+def generate_reports(master, errors):
+
+    os.makedirs("output", exist_ok=True)
+
+    # MASTER LIST
+    with open("output/master_list.txt", "w", encoding="utf-8") as file:
+
+        for student in master.values():
+            file.write(
+                f"{student['reg_no']},"
+                f"{student['name']},"
+                f"{student['department']},"
+                f"{student['email']},"
+                f"{';'.join(student['events'])}\n"
+            )
+
+    # EVENT-WISE PARTICIPANT LISTS
+    event_data = {}
+
+    for student in master.values():
+
+        for event in student["events"]:
+            event_data.setdefault(event, [])
+            event_data[event].append(student)
+
+    for event, students in event_data.items():
+
+        safe_name = "".join(
+            c if c.isalnum() or c in "-_" else "_"
+            for c in event
+        )
+
+        with open(
+            f"output/{safe_name}.txt",
+            "w",
+            encoding="utf-8"
+        ) as file:
+
+            for student in students:
+                file.write(
+                    f"{student['reg_no']},"
+                    f"{student['name']},"
+                    f"{student['email']}\n"
+                )
+
+    # SUMMARY REPORT
+    with open("output/summary.txt", "w", encoding="utf-8") as file:
+
+        file.write("COLLEGE FEST SUMMARY REPORT\n")
+        file.write("---------------------------\n")
+        file.write(f"Total registrations: {len(master)}\n")
+        file.write(f"Total events: {len(event_data)}\n")
+
+        for event, students in event_data.items():
+            file.write(
+                f"{event}: {len(students)} participants\n"
+            )
+
+    # ERROR LOG
+    with open("output/error_log.txt", "w", encoding="utf-8") as file:
+
+        for error in errors:
+            file.write(error + "\n")
+
+
+# MAIN PROGRAM
+
+def main():
+
+    print("COLLEGE FEST REGISTRATION SYSTEM")
+    print("--------------------------------")
+
+    folder = "input"
+
+    records, errors = read_files(folder)
+
+    master = process_records(records, errors)
+
+    generate_reports(master, errors)
+
+    print("Total valid registrations:", len(master))
+    print("Total errors:", len(errors))
+    print("Master list created successfully.")
+    print("Event-wise lists created successfully.")
+    print("Summary report created successfully.")
+    print("Error log created successfully.")
+    print("All reports saved in output folder.")
+
+
+if __name__ == "__main__":
+    main()
