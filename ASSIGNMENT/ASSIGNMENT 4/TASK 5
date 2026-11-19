@@ -1,0 +1,103 @@
+
+import os
+
+# METHOD 1: ONE SCRIPT
+
+def read_attendance(filename):
+    records = []
+
+    try:
+        with open(filename, "r", encoding="utf-8") as file:
+            for line in file:
+                parts = line.strip().split(",")
+
+                if len(parts) == 3 and parts[2] in ("P", "A"):
+                    records.append(parts)
+
+    except FileNotFoundError:
+        print("File not found")
+
+    return records
+
+
+def calculate_percentage(records):
+    stats = {}
+
+    for reg, date, status in records:
+        stats.setdefault(reg, {"P": 0, "A": 0})
+        stats[reg][status] += 1
+
+    result = {}
+
+    for reg, count in stats.items():
+        total = count["P"] + count["A"]
+        result[reg] = count["P"] / total * 100 if total else 0
+
+    return result
+
+
+def find_three_day_absentees(records):
+    attendance = {}
+
+    for reg, date, status in records:
+        attendance.setdefault(reg, {})
+        attendance[reg][date] = status
+
+    absent_students = []
+
+    for reg, days in attendance.items():
+        dates = sorted(days)
+
+        for i in range(len(dates) - 2):
+            if all(days[d] == "A" for d in dates[i:i+3]):
+                absent_students.append(reg)
+                break
+
+    return absent_students
+
+
+def write_report(result, absentees):
+    with open("report.txt", "w", encoding="utf-8") as file:
+        for reg, percentage in result.items():
+            file.write(f"{reg}: {percentage:.2f}%\n")
+
+    with open("three_day_absent.txt", "w", encoding="utf-8") as file:
+        for reg in absentees:
+            file.write(reg + "\n")
+
+
+# MAIN PROGRAM
+
+if __name__ == "__main__":
+
+    # Sample attendance data
+    data = """192311001,2026-10-01,P
+192311001,2026-10-02,A
+192311001,2026-10-03,A
+192311001,2026-10-04,A
+192311002,2026-10-01,P
+192311002,2026-10-02,P
+192311002,2026-10-03,A
+"""
+
+    with open("attendance.csv", "w", encoding="utf-8") as file:
+        file.write(data)
+
+    records = read_attendance("attendance.csv")
+
+    result = calculate_percentage(records)
+
+    absentees = find_three_day_absentees(records)
+
+    write_report(result, absentees)
+
+    print("Attendance Records:", records)
+    print("\nAttendance Percentage:")
+
+    for reg, percentage in result.items():
+        print(reg, ":", round(percentage, 2), "%")
+
+    print("\nStudents Absent for Three Consecutive Days:")
+    print(absentees)
+
+    print("\nReport generated successfully.")
