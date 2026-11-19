@@ -1,0 +1,21 @@
+
+print("ELECTRICITY SUBSIDY")
+
+units = int(input("Enter electricity units: "))
+ration = input("Do you have ration card? (yes/no): ").lower()
+senior = input("Is any member above 80? (yes/no): ").lower()
+
+if units <= 100:
+    print("Full subsidy")
+
+elif units <= 200:
+    if ration == "yes":
+        print("Partial subsidy")
+    else:
+        print("No subsidy")
+
+else:
+    if senior == "yes":
+        print("Special subsidy")
+    else:
+        print("No subsidy")
